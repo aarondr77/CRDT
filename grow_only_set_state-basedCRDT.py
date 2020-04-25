@@ -26,7 +26,6 @@ def main():
         if random.choice(list(range(20))) == 0:
             other_actor = R[1 - actor_id]
             other_actor.merge(actor)
-            #print(f"{other_actor.A} : {actor.A}")
             assert actor.A.issubset(other_actor.A)
             print("merged state is included in replica")
     

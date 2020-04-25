@@ -29,7 +29,6 @@ def main():
             local_unshared_actions = actor.unshared_actions
             other_actor.remote_add(local_unshared_actions)
             actor.unshared_actions = []
-            #print(f"{other_actor.A} : {actor.A}")
             assert actor.A.issubset(other_actor.A)
             print("operations are included in replica")
     
