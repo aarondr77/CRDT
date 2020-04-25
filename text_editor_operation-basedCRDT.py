@@ -1,22 +1,45 @@
 #Implement remote_insert, query, etc. 
 #Implement simulation
 
+# Find a node with a given ID
 def find_node_with_ID(rootNode, id):
-    print("here") 
     if float(rootNode.rootID) == float(id) and len(rootNode.rootID) == len(id):
         return rootNode
     elif float(rootNode.rootID) < float(id) or float(rootNode.rootID) == float(id):
-        print(rootNode.rightChild.value)
+        #print(rootNode.rightChild.value)
         return find_node_with_ID(rootNode.rightChild, id)
     else: 
-        print(rootNode.leftChild.value)
+        #print(rootNode.leftChild.value)
         return find_node_with_ID(rootNode.leftChild, id)
 
-def find_max_id_in_subtree(rootNode):
-    if rootNode.rightChild == None:
+# Insert a value at the given ID
+def insert_at_ID(rootNode, id, value):
+    if float(rootNode.rootID) == float(id) and len(rootNode.rootID) == len(id):
+        rootNode.value.append(value)
         return rootNode
-    else: 
-        return find_max_id_in_subtree(rootNode.rightChild)
+    else:
+        #compare the next path item in the string
+        root_id_len = len(rootNode.rootID)
+        next_path_director = id[root_id_len]
+        if next_path_director == "1":
+            if rootNode.rightChild == None:
+                rootNode.setRightChild(None)
+            print(rootNode.rightChild.rootID)
+            return insert_at_ID(rootNode.rightChild, id, value)
+        else: 
+            if rootNode.leftChild == None:
+                rootNode.setLeftChild(None)
+            return insert_at_ID(rootNode.leftChild, id, value)
+
+# In order traverse the tree and return the document
+def get_document(rootNode, document):
+    if rootNode == None:
+        return None
+    
+    get_document(rootNode.leftChild, document)
+    document.append((rootNode.rootID, rootNode.value))
+    get_document(rootNode.rightChild, document)
+    return document
 
 # unqique identifier tree
 class client():
@@ -29,7 +52,7 @@ class client():
     def local_insert(self, element, previous_id):
         #get the previous node
         previous_node = find_node_with_ID(self.rootNode, previous_id)
-        print(previous_node.value)
+        #print(previous_node.value)
         #create new element
         safe_element = element + ":" + self.site_id
         #insert the new element as the right child
@@ -40,42 +63,15 @@ class client():
     def remote_insert(self, remote_operations):
         for op in remote_operations:
             if op[0] == "insert":
-                self.insert_at_ID(self.rootNode, op[1], op[2])
-
-
-    # Implement insert_at_ID for use in remote insert. 
-    # The id added might already have a value in which case it should double up 
-    # The id added might also be null, in which case we need to identify it and then apply it
-    # if the operations are received out of order, then we need to recursivly make the nodes 
-    # because we might need a node that is far down in the unbuilt territory
-    @staticmethod 
-    def insert_at_ID(rootNode, id, value):
-        if float(rootNode.rootID) == float(id) and len(rootNode.rootID) == len(id):
-            rootNode.value.append(value)
-            return rootNode
-        elif float(rootNode.rootID) < float(id) or float(rootNode.rootID) == float(id):
-            if rootNode.leftChild == None:
-                rootNode.setLeftChild(None)
-            return insert_at_ID(rootNode.leftChild, id, value)
-        else: 
-            if rootNode.rightChild == None:
-                rootNode.setRightChild(None)
-            return insert_at_ID(rootNode.rightChild, id, value)
+                print(op[1])
+                #print(self.rootNode.rootID)
+                insert_at_ID(self.rootNode, op[1], op[2])
 
     @staticmethod
     def add_first_node(rootNode, value):
         if rootNode.leftChild == None:
             rootNode.setLeftChild(value)
         else: add_first_node(rootNode.leftChild, value)
-
-def get_document(rootNode, document):
-    if rootNode == None:
-        return None
-    
-    get_document(rootNode.leftChild, document)
-    document.append((rootNode.rootID, rootNode.value))
-    get_document(rootNode.rightChild, document)
-    return document
 
 class uID_tree_node():
     def __init__(self, rootID, value):
@@ -101,10 +97,10 @@ def main():
     r0.local_insert("A", "0")
     r0.local_insert("B", "01")
 
-    #print(r0.unshared_operations)
+    print(r0.unshared_operations)
     #r0.local_insert("B", "011")
 
-    #r0.remote_insert([("insert", "100", "X"), ("insert", "101", "Y"), ("insert", "100000000", "Z")])
+    r0.remote_insert([("insert", "0", "X")])
 
     #tree.rootNode.setRightChild("B")
     #tree.rootNode.rightChild.setLeftChild("C")
