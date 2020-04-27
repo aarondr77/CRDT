@@ -71,13 +71,12 @@ class client():
         self.element_mapping.append((safe_element, inserted_id))
         self.unshared_operations.append(("insert", safe_element, inserted_id))
 
-
     def local_delete(self, element, id):
+        self.delete(element, id)        
+        self.unshared_operations.append(("delete", element, id))
+
+    def delete(self, element, id):
         node = get_node_with_ID(self.rootNode, id)
-        #(node.rootID)
-        #print(node.elements)
-        #print(self.element_mapping)
-        #print(element)
         node.elements.remove(element)
         self.element_mapping.remove((element, id))
 
@@ -85,7 +84,7 @@ class client():
         for op in remote_operations:
             (operation, element, id) = op
             if operation == "insert":
-                inserted_node = get_node_with_ID(self.rootNode, id)
+                inserted_node = get_node_with_ID(self.rootNode, id[0: len(id) - 1])
                 if id[len(id) - 1] == "1":
                     inserted_node.setRightChild(element)
                 else:
@@ -93,7 +92,8 @@ class client():
                 # Add id to element locations
                 self.element_mapping.append((element, id))
             if operation == "delete":
-                self.local_delete(element, id)
+                print(get_document(self.rootNode))
+                self.delete(element, id)
 
 class uID_tree_node():
     def __init__(self, element, rootID):
@@ -104,20 +104,22 @@ class uID_tree_node():
         self.rightChild = None
 
     def setLeftChild(self, left_child_element):
-        newID = self.rootID + "0"
         if self.leftChild == None:
+            newID = self.rootID + "0"
             self.leftChild = uID_tree_node(left_child_element, newID)
+            return newID
         else: 
             self.leftChild.elements.append(left_child_element)
-        return newID
+            return self.leftChild.rootID
 
     def setRightChild(self, right_child_element):
         newID = self.rootID + "1"
         if self.rightChild == None:
             self.rightChild = uID_tree_node(right_child_element, newID)
+            return newID
         else: 
             self.rightChild.elements.append(right_child_element)
-        return newID
+            return self.rightChild.rootID
 
 def main():
     # replicas r0, r1 which receive local state manipulations
@@ -130,22 +132,24 @@ def main():
     r0.local_insert("A", "0")
     r1.local_insert("A", "0")
 
+    r0.unshared_operations = []
+    r1.unshared_operations = []
+
     actions = []
     # I think the problem is deleting an element when there are other elements on the node. It deletes all
     # Lets check
 
-    r0.local_insert("B", "0")
-    print("after first insert")
-    print(r0.rootNode.rightChild.elements)
+    
+    r0.local_insert("B", "01")
+    unshared_actions = r0.unshared_operations
+    print(unshared_actions)
+    r1.remote_operations(unshared_actions)
+    
     print(r0.element_mapping)
-
-    r0.local_delete("B:site 0", "01")
-    print("after first delete")
-    print(r0.rootNode.rightChild.elements)
-    print(r0.element_mapping)
-
+    print(r1.element_mapping)
 
     
+    """
     for i in range(100):
         # choose an actor
         actor_id = random.choice([0, 1])
@@ -162,7 +166,6 @@ def main():
             actor.local_insert(element, id)
         else: 
             if not len(actor.element_mapping) == 0:
-                print("delete")
                 (element, id) = random.choice(actor.element_mapping)
                 print("delete: " + element + " @ id: " + id)
                 actor.local_delete(element, id)
@@ -172,14 +175,14 @@ def main():
 
         # 1/20th of the time we send local ushared actions to the other actor  
         # and check that actions are included correctly 
-        """
+        
         if random.choice(list(range(20))) == 0:
             other_actor = R[1 - actor_id]
             local_unshared_actions = actor.unshared_operations
             other_actor.remote_operations(local_unshared_actions)
             actor.unshared_actions = []
             print("operations are included in replica")
-        """
+        
     
     # share unshared actions one last time at the end 
     # and check that the states are equal!
@@ -190,6 +193,8 @@ def main():
     r1.remote_operations(r0_unshared_actions)
     assert get_document(r0.rootNode) == get_document(r1.rootNode)
     print("simulation complete and replica states are equivalent")
+
+    """
     
 main()
 
