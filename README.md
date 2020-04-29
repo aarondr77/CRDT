@@ -17,5 +17,6 @@ This paper proposes an operation based CRDT implementation of a real-time collab
 
 ```
 git clone 
-Python3 <file name>
+cd text-editor-operation-basedCRDT/
+python3 main.py
 ```
