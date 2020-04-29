@@ -29,6 +29,7 @@ def main():
             local_unshared_actions = actor.unshared_actions
             other_actor.remote_add(local_unshared_actions)
             actor.unshared_actions = []
+
             assert actor.A.issubset(other_actor.A)
             print("operations are included in replica")
     
@@ -50,13 +51,13 @@ class grow_only_set():
 
     def local_add(self, e):
         self.A.add(e)
-        self.unshared_actions.append("add(e)")
+        prepared_message = "add({})".format(e)
+        self.unshared_actions.append(prepared_message)
 
     def remote_add(self, remote_actions):
         for action in remote_actions:
-            element = re.split('()', action)[1]
-            print(element)
-            self.local_add(element)
+            element = action.replace(")", "").split("(")[1]
+            self.local_add(int(element))
 
     def lookup(self, e):
         return e in self.A
